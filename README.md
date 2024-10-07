@@ -21,7 +21,7 @@ Docker setup that allows Engage+ to visualize metrics on Prometheus and Grafana
 2. Refer to https://grafana.com/docs/grafana/latest/dashboards/build-dashboards/create-dashboard/ on how to create a new dashboard. When ask to select datasource, select "Prometheus" as the datasource that is created.
 3. Refer to https://grafana.com/docs/grafana/latest/panels-visualizations/visualizations/ on how to add visualizations, we will need to add the following metrics:
 
-    a. `rate(pes_sdk_`<channel>`_send[1m]) * 60` to visualize the number of channel sent in a minute
+    a. `rate(pes_sdk_<channel>_send[1m]) * 60` to visualize the number of channel sent in a minute
 
     b. `pes_sdk_<channel>_success` to visualize the total number of channel sent successfully
 
@@ -30,3 +30,17 @@ Docker setup that allows Engage+ to visualize metrics on Prometheus and Grafana
     b. `pes_sdk_<channel>_invalid` to visualize the total number of channel is not sent due to invalid errors
 
 4. Feel free to play around the metrics that's collected from PES .NET SDK
+
+# Configure Prometheus to Scrape from New Metric Endpoint in Engage+
+
+1. Navigate to `engage-plus/prometheus/prometheus.yml`
+2. Add the following to `scrape_configs`:
+    ```
+      - job_name: 'xyz_cms'             # can change to any job name
+        metrics_path: '/cms/metrics'    # can change according to the metric endpoint that is exposed
+        scheme: 'http'
+        static_configs:
+        - targets: ['host.docker.internal:80']
+        tls_config:
+        insecure_skip_verify: true
+    ```
