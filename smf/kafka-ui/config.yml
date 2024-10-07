@@ -1,0 +1,26 @@
+auth:
+  type: DISABLED
+kafka:
+  clusters:
+  - bootstrapServers: kafka_1:9092,kafka_2:9093
+    name: local
+    properties: {}
+    readOnly: false
+  - bootstrapServers: b-1.ue1dkasmfmsk04testcon.anvwb8.c14.kafka.us-east-1.amazonaws.com:9098,b-2.ue1dkasmfmsk04testcon.anvwb8.c14.kafka.us-east-1.amazonaws.com:9098
+    name: ue1dkasmfmsk04-testcon
+    properties:
+      security.protocol: SASL_SSL
+      sasl.mechanism: AWS_MSK_IAM
+      sasl.jaas.config: software.amazon.msk.auth.iam.IAMLoginModule required awsProfileName="default";
+      sasl.client.callback.handler.class: software.amazon.msk.auth.iam.IAMClientCallbackHandler
+    readOnly: false
+  - bootstrapServers: b-1.shared-msk01.j06mli.c8.kafka.us-east-1.amazonaws.com:9092,b-2.shared-msk01.j06mli.c8.kafka.us-east-1.amazonaws.com:9092
+    name: shared-msk01
+    properties: {}
+    readOnly: false
+  - bootstrapServers: b-1.pesusmsk.fn1b6t.c3.kafka.us-east-1.amazonaws.com:9092,b-2.pesusmsk.fn1b6t.c3.kafka.us-east-1.amazonaws.com:9092,b-3.pesusmsk.fn1b6t.c3.kafka.us-east-1.amazonaws.com:9092
+    name: pes-prod-na
+    properties: {}
+    readOnly: false
+rbac:
+  roles: []

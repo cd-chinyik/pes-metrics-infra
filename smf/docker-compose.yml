@@ -1,0 +1,108 @@
+services:
+    redis:
+        image: 'redis:latest'
+        container_name: smf-redis
+        hostname: redis
+        restart: always
+        ports:
+            - "6379:6379"
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+            
+    zookeeper:
+        image: 'confluentinc/cp-zookeeper:latest'
+        container_name: smf-zookeeper
+        restart: always
+        ports:
+            - 2181:2181
+        environment:
+            ZOOKEEPER_CLIENT_PORT: 2181
+            ZOOKEEPER_TICK_TIME: 2000
+        volumes:
+            - "./zookeeper/data:/var/lib/zookeeper/data"
+            - "./zookeeper/log:/var/lib/zookeeper/log"
+            
+    kafka_1:
+        depends_on: 
+            - zookeeper
+        image: 'confluentinc/cp-kafka:latest'
+        container_name: smf-kafka_1
+        hostname: kafka_1
+        restart: always
+        ports:
+            - "29092:29092"
+        environment:
+            KAFKA_BROKER_ID: 1
+            KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_1:9092,PLAINTEXT_HOST://localhost:29092
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        volumes:
+            - "./kafka/broker-1:/var/lib/kafka/data"
+    
+    kafka_2:
+        depends_on: 
+            - zookeeper
+        image: 'confluentinc/cp-kafka:latest'
+        container_name: smf-kafka_2
+        hostname: kafka_2
+        restart: always
+        ports:
+            - "29093:29093"
+        environment:
+            KAFKA_BROKER_ID: 2
+            KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+            KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka_2:9093,PLAINTEXT_HOST://localhost:29093
+            KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+            KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+            KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+        volumes:
+            - "./kafka/broker-2:/var/lib/kafka/data"
+            
+    kafka-ui:
+        container_name: smf-kafka-ui
+        image: provectuslabs/kafka-ui:latest
+        ports:
+            - 8000:8080
+        depends_on:
+            - kafka_1
+            - kafka_2
+        volumes:
+            - type: bind
+              source: ./kafka-ui/config.yml
+              target: /etc/kafkaui/dynamic_config.yaml
+        environment:
+            AWS_ACCESS_KEY_ID: '<your_aws_access_key>'
+            AWS_SECRET_ACCESS_KEY: '<your_aws_secret_key>'
+            AWS_DEFAULT_REGION: 'us-east-1'
+            DYNAMIC_CONFIG_ENABLED: 'true'
+    prometheus:
+        image: prom/prometheus:latest
+        container_name: smf-prometheus
+        restart: always
+        ports:
+            - "9090:9090"
+        volumes:
+            - "./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml"
+        command:
+            - '--config.file=/etc/prometheus/prometheus.yml'
+            - --enable-feature=otlp-write-receiver
+    grafana:
+        image: grafana/grafana:latest
+        container_name: smf-grafana
+        restart: always
+        ports:
+            - "3000:3000"
+        environment:
+            - GF_SERVER_ROOT_URL=http://smf-grafana:3000
+            - GF_SECURITY_ADMIN_USER=admin
+            - GF_SECURITY_ADMIN_PASSWORD=admin
+        volumes:
+            - "./grafana:/etc/grafana/provisioning"
+        depends_on:
+            - prometheus
