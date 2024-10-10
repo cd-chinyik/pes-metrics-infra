@@ -1,6 +1,9 @@
 # engage-plus-metrics-infra
 Docker setup that allows Engage+ to visualize metrics on Prometheus and Grafana
 
+# Architecture
+![alt text](/images/pes-metrics-infra.jpg)
+
 # How to Run
 
 1. Modify host file (`C:\Windows\System32\drivers\etc\hosts` for Windows and `/etc/hosts` for Linux/MacOS)

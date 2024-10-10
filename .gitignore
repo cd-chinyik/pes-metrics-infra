@@ -1,0 +1,3 @@
+# Ignore SMF Kafka and Zookeeper data
+/smf/kafka/
+/smf/zookeeper/
